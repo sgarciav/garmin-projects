@@ -1,0 +1,5 @@
+# pip install garminconnect
+
+garth
+requests
+readchar
