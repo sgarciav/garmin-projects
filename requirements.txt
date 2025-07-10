@@ -3,3 +3,4 @@
 garth
 requests
 readchar
+matplotlib==3.10.3
