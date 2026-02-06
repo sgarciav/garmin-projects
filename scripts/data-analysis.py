@@ -55,6 +55,10 @@ def init_api(email, password):
             f"Trying to login to Garmin Connect using token data from directory '{tokenstore}'...\n"
         )
 
+        filename = os.path.join(tokenstore, 'oauth1_token.json')
+        if not os.path.exists(filename):
+            print(f'-- File ({filename}) does not exist. Attempting to login through provided credentials.')
+
         # Using Oauth1 and Oauth2 tokens from base64 encoded string
         # print(
         #     f"Trying to login to Garmin Connect using token data from file '{tokenstore_base64}'...\n"
@@ -73,9 +77,12 @@ def init_api(email, password):
             f"They will be stored in '{tokenstore}' for future use.\n"
         )
         try:
-            # Ask for credentials if not set as environment variables
+            # # Ask for credentials if not set as environment variables
+            # if not email or not password:
+            #     email, password = get_credentials()
             if not email or not password:
-                email, password = get_credentials()
+                print(f'-- No email or password provided')
+                return None
 
             garmin = Garmin(
                 email=email, password=password, is_cn=False, return_on_mfa=True
@@ -148,7 +155,7 @@ def main():
     # Connect to the API
     api = init_api(args.email, args.password)
     if api is None:
-        print("An error occurred while initializing the API")
+        print("-- An error occurred while initializing the API")
         return
 
     # Determine time perid
@@ -178,7 +185,7 @@ def main():
     activities_df_filtered.loc[:, 'activityType'] = activities_df_filtered['activityType'].apply(lambda x: x['typeKey'])
 
     # Create new column showing duration as hours instead of seconds
-    activities_df_filtered['distance_mi'] = activities_df_filtered['distance'].apply(lambda x: x/1609))
+    activities_df_filtered['distance_mi'] = activities_df_filtered['distance'].apply(lambda x: x/1609)
 
     # Plot the graph
     plt.bar(activities_df_filtered.startTimeLocal,
