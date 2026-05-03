@@ -6,7 +6,7 @@ to code some apps for the Garmin watch.
 
 # Projects
 
-## 200m Average
+### 200m Average
 
 **Type**: Data Field
 
