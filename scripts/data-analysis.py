@@ -37,6 +37,11 @@ tokenstore_base64 = os.getenv("GARMINTOKENS_BASE64") or "~/.garminconnect_base64
 api = None
 
 
+available_tasks = {
+    '1' : 'Write all activities specified since STARTDATE to CSV file',
+    '2' : 'Update weekly milage of specified activity'
+}
+
 # ========================
 # Copied from: https://github.com/cyberjunky/python-garminconnect/blob/master/example.py
 # ========================
@@ -121,36 +126,35 @@ def init_api(email, password):
     return garmin
 
 
+def get_args():
+    parser = argparse.ArgumentParser(description = 'Analyze Garmin data.')
+    parser.add_argument('mode',
+                        choices=['write', 'weekly_milage'],
+                        help='Specify mode')
+
+    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Print debug messages.')
+    parser.add_argument('-e', '--email', type=str, default="sergioernesto88@gmail.com", help='User email.')
+    parser.add_argument('-p', '--password', type=str, default=None, help='User password.')
+    parser.add_argument('--start-date', type=str, default="2025-01-01", help='Start date of analysis in format YYYY-MM-DD.')
+
+    parser.add_argument('--activity-type', type=str, default="running", help='Options: running, swimming, walking, cycling.')
+    # parser.add_argument('--activity-types', metavar='N', nargs='+', type=str, default='running', help='Options: running, swimming, walking, cycling.')
+
+    return parser.parse_args()
+
 
 def dateStrToDatetime(date_str):
     ds = date_str.split("-")
     return datetime.date(int(ds[0]), int(ds[1]), int(ds[2]))
 
 
-def main():
-    parser = argparse.ArgumentParser(description = 'Analyze Garmin data.')
-    parser.add_argument('-v', '--verbose',
-                        action='store_true',
-                        default=False,
-                        help='Print debug messages.')
-    parser.add_argument('-e', '--email',
-                        type=str,
-                        default="sergioernesto88@gmail.com",
-                        help='User email.')
-    parser.add_argument('-p', '--password',
-                        type=str,
-                        default=None,
-                        help='User password.')
-    parser.add_argument('-sd', '--start-date',
-                        type=str,
-                        default="2025-01-01",
-                        help='Start date of analysis in format YYYY-MM-DD.')
-    parser.add_argument('-at', '--activity-type',
-                        type=str,
-                        default="running",
-                        help='Options: running, swimming, walking, cycling.')
+def print_available_tasks():
+    for i in available_tasks:
+        print(i)
 
-    args = parser.parse_args()
+
+def main(args):
+
 
     # Connect to the API
     api = init_api(args.email, args.password)
@@ -166,6 +170,8 @@ def main():
     # activity_start_date = datetime.date(2025, 1, 1)
     # activity_end_date = datetime.date(2025, 2, 10)
 
+    # TODO: This should be a for loop to group all acitivies specified.
+
     # Call the api and create a list of activities from that timeframe
     activities = api.get_activities_by_date(
         startdate.isoformat(),
@@ -174,12 +180,14 @@ def main():
     )
 
     activities_df = pd.DataFrame(activities)
-    # activities_df.to_csv('sergiotest.csv', index=False) # debug
 
     # Select columns of interest
     activities_df_filtered = activities_df[[
         'activityId','startTimeLocal','activityType','distance','averageHR','maxHR'
     ]]
+
+    # Create new column showing distance in miles
+    activities_df_filtered['distance_mi'] = activities_df_filtered['distance'].apply(lambda x: x/1609)
 
     # Update activityType column to only contain activity type name
     activities_df_filtered.loc[:, 'activityType'] = activities_df_filtered['activityType'].apply(lambda x: x['typeKey'])
@@ -187,16 +195,28 @@ def main():
     # Create new column showing duration as hours instead of seconds
     activities_df_filtered['distance_mi'] = activities_df_filtered['distance'].apply(lambda x: x/1609)
 
-    # Plot the graph
-    plt.bar(activities_df_filtered.startTimeLocal,
-            activities_df_filtered.distance_mi, color='b')
-    plt.set_xlabel('Date')
-    plt.set_ylabel('Distance [mi]')
-    plt.xticks(rotation=90)
+    # Select task
+    # ------------------------
+    if args.tasks == 'p':
+        print_available_tasks()
+    elif args.tasks == 1:
+        filename = str(arsg.activity_type) + '_activities-' + str(startdate) + ':' + str(enddate) + '.csv'
+        activities_df.to_csv(filename, index=False)
+    # elif selected_task == "":
+    else:
+        print(f'Task [{task[selected_task]}] is not currently implemented.')
+        return
 
-    # Show the plot
-    plt.show()
+    # # Plot the graph
+    # plt.bar(activities_df_filtered.startTimeLocal,
+    #         activities_df_filtered.distance_mi, color='b')
+    # plt.set_xlabel('Date')
+    # plt.set_ylabel('Distance [mi]')
+    # plt.xticks(rotation=90)
+
+    # # Show the plot
+    # plt.show()
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main(get_args())
