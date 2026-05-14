@@ -12,10 +12,7 @@ to code some apps for the Garmin watch.
 
 For track workouts, compute the average time per 200m.
 
-# Scripts
-
-This repo also hosts some Python scripts to analyze data and get specific
-information.
+# Data-analysis
 
 ## First Time Instructions
 
@@ -25,8 +22,37 @@ information.
         $ python3 -m venv env
         $ source env/bin/activate
 
-2. Install the dependencies of your env:
+1. Install the dependencies of your env:
 
         $ cd /path/to/this-repo
         $ pip3 install -r requirements.txt
         $ pip install garminconnect
+
+1. Create a new React app using Node.js (create the `frontend` directory and
+   make sure it's empty):
+
+        npx create-react-app frontend
+
+Once you initialize the app, you'll be able to interact witn `npm`:
+
+Inside that directory, you can run several commands:
+
+    npm start
+        Starts the development server.
+
+    npm run build
+        Bundles the app into static files for production.
+
+    npm test
+        Starts the test runner.
+
+    npm run eject
+      Removes this tool and copies build dependencies, configuration files
+      and scripts into the app directory. If you do this, you can’t go back!
+
+1. Install some React packages:
+
+        cd frontend
+        npm install axios recharts
+
+## Development

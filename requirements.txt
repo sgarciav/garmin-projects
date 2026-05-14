@@ -5,3 +5,5 @@ requests
 readchar
 matplotlib==3.10.3
 pandas
+flask
+flask-cors
