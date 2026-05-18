@@ -6,12 +6,12 @@ import {
 import './App.css';
 
 function App() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('garmin_email') || '');
+  const [password, setPassword] = useState(() => localStorage.getItem('garmin_password') || '');
   const [mfaCode, setMfaCode] = useState('');
 
   // step 0: Login, step 1: MFA, step 2: Dashboard
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => Number(localStorage.getItem('garmin_step')) || 0);
   const [activities, setActivities] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,6 +29,9 @@ function App() {
       });
 
       if (response.data.status === 'success') {
+        localStorage.setItem('garmin_email', email);
+        localStorage.setItem('garmin_password', password);
+        localStorage.setItem('garmin_step', '2');
         setStep(2); // Move to dashboard
       }
     } catch (err) {
@@ -68,9 +71,22 @@ function App() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('garmin_email');
+    localStorage.removeItem('garmin_password');
+    localStorage.removeItem('garmin_step');
+    setStep(0);
+    setActivities([]);
+  };
+
   return (
     <div className="App" style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h1>Garmin Activity Dashboard</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>Garmin Activity Dashboard</h1>
+        {step === 2 && (
+          <button onClick={handleLogout} style={{ padding: '5px 10px', height: '35px' }}>Logout</button>
+        )}
+      </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 

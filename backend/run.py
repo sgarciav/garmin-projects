@@ -4,6 +4,7 @@ from garminconnect import Garmin, GarminConnectAuthenticationError
 import pandas as pd
 import datetime
 import os
+import numpy as np
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key" # Needed for Flask sessions
@@ -48,15 +49,13 @@ def get_activities():
     data = request.json
     email = data.get('email')
     password = data.get('password')
-    start_date = data.get('startDate', '2024-01-01')
+    start_date = data.get('startDate', '2026-01-01')
     activity_type = data.get('activityType', 'running')
 
     try:
-        print("1. Authenticating...")
         garmin = Garmin(email, password)
         garmin.login(TOKEN_STORE_DIR)
 
-        print(f"2. Fetching activities from {start_date}...")
         end_date = datetime.date.today().isoformat()
         activities = garmin.get_activities_by_date(start_date, end_date, activity_type)
 
@@ -64,24 +63,14 @@ def get_activities():
             print("No activities found.")
             return jsonify([])
 
-        print(f"3. Found {len(activities)} activities. Processing with Pandas...")
         df = pd.DataFrame(activities)
 
         desired_columns = ['activityId', 'startTimeLocal', 'activityType', 'distance', 'averageHR', 'maxHR']
         df_filtered = df.reindex(columns=desired_columns).copy()
-
-        print("4. Calculating distance...")
         df_filtered['distance_mi'] = df_filtered['distance'].apply(lambda x: x / 1609.34 if pd.notnull(x) else 0)
-
-        print("5. Parsing activity type...")
         df_filtered['activityType'] = df_filtered['activityType'].apply(lambda x: x['typeKey'] if isinstance(x, dict) else x)
-
-        print("6. Cleaning up NaNs...")
-        # Using a safer method to replace NaNs for JSON serialization
-        import numpy as np
         df_filtered = df_filtered.replace({np.nan: None})
 
-        print("7. Sending response...")
         return jsonify(df_filtered.to_dict(orient='records'))
 
     except Exception as e:
