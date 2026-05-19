@@ -117,6 +117,16 @@ function App() {
       weeks.push(week);
       currentWeekStart = currentWeekStart.add(7, 'day');
     }
+
+    // Calculate percentage difference from previous week
+    for (let i = 0; i < weeks.length; i++) {
+      if (i === 0 || weeks[i - 1].total === 0) {
+        weeks[i].percentChange = null;
+      } else {
+        weeks[i].percentChange = ((weeks[i].total - weeks[i - 1].total) / weeks[i - 1].total) * 100;
+      }
+    }
+
     return weeks;
   }, [activities]);
 
@@ -226,6 +236,7 @@ function App() {
                         <TableCell align="center"><strong>Sat</strong></TableCell>
                         <TableCell align="center"><strong>Sun</strong></TableCell>
                         <TableCell align="center" sx={{ backgroundColor: '#e0e0e0' }}><strong>Total (mi)</strong></TableCell>
+                        <TableCell align="center" sx={{ backgroundColor: '#e0e0e0' }}><strong>% Change</strong></TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -241,6 +252,13 @@ function App() {
                           ))}
                           <TableCell align="center" sx={{ fontWeight: 'bold', backgroundColor: '#f9f9f9', color: week.total > 0 ? 'secondary.main' : 'inherit' }}>
                             {week.total.toFixed(2)}
+                          </TableCell>
+                          <TableCell align="center" sx={{ 
+                            fontWeight: 'bold', 
+                            backgroundColor: '#f9f9f9', 
+                            color: week.percentChange > 0 ? 'success.main' : (week.percentChange < 0 ? 'error.main' : 'inherit') 
+                          }}>
+                            {week.percentChange !== null ? `${week.percentChange > 0 ? '+' : ''}${week.percentChange.toFixed(1)}%` : '-'}
                           </TableCell>
                         </TableRow>
                       ))}
